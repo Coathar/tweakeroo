@@ -73,13 +73,9 @@ public abstract class MixinMinecraftClient implements IMinecraftClientInvoker
 
     @Inject(method = "doAttack", at = {
             @At(value = "INVOKE",
-                target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackEntity(" +
-                         "Lnet/minecraft/entity/player/PlayerEntity;" +
-                         "Lnet/minecraft/entity/Entity;)V"),
+                target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackEntity(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;)V"),
             @At(value = "INVOKE",
-                target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackBlock(" +
-                         "Lnet/minecraft/util/math/BlockPos;" +
-                         "Lnet/minecraft/util/math/Direction;)Z")
+                target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackBlock(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/Direction;)Z")
             })
     private void onLeftClickMousePre(CallbackInfo ci)
     {
