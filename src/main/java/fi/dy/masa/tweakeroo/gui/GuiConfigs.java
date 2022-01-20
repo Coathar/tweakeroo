@@ -3,9 +3,9 @@ package fi.dy.masa.tweakeroo.gui;
 import java.util.Collections;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
-import fi.dy.masa.malilib.config.ConfigType;
-import fi.dy.masa.malilib.config.ConfigUtils;
 import fi.dy.masa.malilib.config.IConfigBase;
+import fi.dy.masa.malilib.config.IHotkeyTogglable;
+import fi.dy.masa.malilib.config.options.BooleanHotkeyGuiWrapper;
 import fi.dy.masa.malilib.gui.GuiConfigsBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
@@ -18,7 +18,13 @@ import fi.dy.masa.tweakeroo.config.Hotkeys;
 
 public class GuiConfigs extends GuiConfigsBase
 {
-    private static ConfigGuiTab tab = ConfigGuiTab.TWEAK_TOGGLES;
+    // If you have an add-on mod, you can append stuff to these GUI lists by re-assigning a new list to it.
+    // I'd recommend using your own config handler for the config serialization to/from config files.
+    // Although the config dirty marking stuff probably is a mess in this old malilib code base for that stuff...
+    public static ImmutableList<FeatureToggle> TWEAK_LIST = FeatureToggle.VALUES;
+    public static ImmutableList<IHotkeyTogglable> YEET_LIST = Configs.Disable.OPTIONS;
+
+    private static ConfigGuiTab tab = ConfigGuiTab.TWEAKS;
 
     public GuiConfigs()
     {
@@ -58,24 +64,24 @@ public class GuiConfigs extends GuiConfigsBase
         {
             return 120;
         }
-        else if (tab == ConfigGuiTab.FIXES || tab == ConfigGuiTab.TWEAK_TOGGLES || tab == ConfigGuiTab.DISABLE_TOGGLES)
+        else if (tab == ConfigGuiTab.FIXES)
         {
-            return 80;
+            return 60;
         }
         else if (tab == ConfigGuiTab.LISTS)
         {
             return 200;
         }
 
-        return super.getConfigWidth();
+        return 260;
     }
 
     @Override
     protected boolean useKeybindSearch()
     {
-        return GuiConfigs.tab == ConfigGuiTab.TWEAK_HOTKEYS ||
+        return GuiConfigs.tab == ConfigGuiTab.TWEAKS ||
                GuiConfigs.tab == ConfigGuiTab.GENERIC_HOTKEYS ||
-               GuiConfigs.tab == ConfigGuiTab.DISABLE_HOTKEYS;
+               GuiConfigs.tab == ConfigGuiTab.DISABLES;
     }
 
     @Override
@@ -96,21 +102,13 @@ public class GuiConfigs extends GuiConfigsBase
         {
             configs = Configs.Lists.OPTIONS;
         }
-        else if (tab == ConfigGuiTab.DISABLE_TOGGLES)
+        else if (tab == ConfigGuiTab.DISABLES)
         {
-            configs = ConfigUtils.createConfigWrapperForType(ConfigType.BOOLEAN, ImmutableList.copyOf(Configs.Disable.OPTIONS));
+            return ConfigOptionWrapper.createFor(YEET_LIST);
         }
-        else if (tab == ConfigGuiTab.DISABLE_HOTKEYS)
+        else if (tab == ConfigGuiTab.TWEAKS)
         {
-            configs = ConfigUtils.createConfigWrapperForType(ConfigType.HOTKEY, ImmutableList.copyOf(Configs.Disable.OPTIONS));
-        }
-        else if (tab == ConfigGuiTab.TWEAK_TOGGLES)
-        {
-            configs = ConfigUtils.createConfigWrapperForType(ConfigType.BOOLEAN, ImmutableList.copyOf(FeatureToggle.values()));
-        }
-        else if (tab == ConfigGuiTab.TWEAK_HOTKEYS)
-        {
-            configs = ConfigUtils.createConfigWrapperForType(ConfigType.HOTKEY, ImmutableList.copyOf(FeatureToggle.values()));
+            return ConfigOptionWrapper.createFor(TWEAK_LIST.stream().map(this::wrapConfig).toList());
         }
         else if (tab == ConfigGuiTab.GENERIC_HOTKEYS)
         {
@@ -122,6 +120,11 @@ public class GuiConfigs extends GuiConfigsBase
         }
 
         return ConfigOptionWrapper.createFor(configs);
+    }
+
+    protected BooleanHotkeyGuiWrapper wrapConfig(FeatureToggle config)
+    {
+        return new BooleanHotkeyGuiWrapper(config.getName(), config, config.getKeybind());
     }
 
     private static class ButtonListener implements IButtonActionListener
@@ -139,17 +142,9 @@ public class GuiConfigs extends GuiConfigsBase
         public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
             GuiConfigs.tab = this.tab;
-
-            if (this.tab != ConfigGuiTab.PLACEMENT)
-            {
-                this.parent.reCreateListWidget(); // apply the new config width
-                this.parent.getListWidget().resetScrollbarPosition();
-                this.parent.initGui();
-            }
-            else
-            {
-                //GuiBase.openGui(new GuiPlacementSettings());
-            }
+            this.parent.reCreateListWidget(); // apply the new config width
+            this.parent.getListWidget().resetScrollbarPosition();
+            this.parent.initGui();
         }
     }
 
@@ -158,16 +153,13 @@ public class GuiConfigs extends GuiConfigsBase
         GENERIC         ("tweakeroo.gui.button.config_gui.generic"),
         FIXES           ("tweakeroo.gui.button.config_gui.fixes"),
         LISTS           ("tweakeroo.gui.button.config_gui.lists"),
-        TWEAK_TOGGLES   ("tweakeroo.gui.button.config_gui.tweak_toggles"),
-        TWEAK_HOTKEYS   ("tweakeroo.gui.button.config_gui.tweak_hotkeys"),
+        TWEAKS          ("tweakeroo.gui.button.config_gui.tweaks"),
         GENERIC_HOTKEYS ("tweakeroo.gui.button.config_gui.generic_hotkeys"),
-        DISABLE_TOGGLES ("tweakeroo.gui.button.config_gui.disable_toggle"),
-        DISABLE_HOTKEYS ("tweakeroo.gui.button.config_gui.disable_hotkeys"),
-        PLACEMENT       ("tweakeroo.gui.button.config_gui.placement");
+        DISABLES        ("tweakeroo.gui.button.config_gui.disables");
 
         private final String translationKey;
 
-        private ConfigGuiTab(String translationKey)
+        ConfigGuiTab(String translationKey)
         {
             this.translationKey = translationKey;
         }

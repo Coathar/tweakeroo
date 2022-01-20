@@ -20,6 +20,10 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.map.MapState;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
@@ -31,14 +35,17 @@ import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.Message;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.PositionUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.tweakeroo.Reference;
+import fi.dy.masa.tweakeroo.Tweakeroo;
 import fi.dy.masa.tweakeroo.config.Configs;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import fi.dy.masa.tweakeroo.config.Hotkeys;
 import fi.dy.masa.tweakeroo.mixin.IMixinAxeItem;
 import fi.dy.masa.tweakeroo.mixin.IMixinClientWorld;
 import fi.dy.masa.tweakeroo.mixin.IMixinCommandBlockExecutor;
+import fi.dy.masa.tweakeroo.mixin.IMixinShovelItem;
 import fi.dy.masa.tweakeroo.renderer.RenderUtils;
 
 public class MiscUtils
@@ -127,6 +134,12 @@ public class MiscUtils
         return IMixinAxeItem.tweakeroo_getStrippedBlocks().containsKey(state.getBlock());
     }
 
+    public static boolean isShovelPathConvertableBlock(World world, BlockPos pos)
+    {
+        BlockState state = world.getBlockState(pos);
+        return IMixinShovelItem.tweakeroo_getPathStates().containsKey(state.getBlock());
+    }
+
     public static boolean getUpdateExec(CommandBlockBlockEntity te)
     {
         return ((IMixinCommandBlockExecutor) te.getCommandExecutor()).getUpdateLastExecution();
@@ -135,6 +148,22 @@ public class MiscUtils
     public static void setUpdateExec(CommandBlockBlockEntity te, boolean value)
     {
         ((IMixinCommandBlockExecutor) te.getCommandExecutor()).setUpdateLastExecution(value);
+    }
+
+    public static void printDeathCoordinates(MinecraftClient mc)
+    {
+        BlockPos pos = PositionUtils.getEntityBlockPos(mc.player);
+        String dim = mc.player.getEntityWorld().getRegistryKey().getValue().toString();
+        String str = StringUtils.translate("tweakeroo.message.death_coordinates",
+                                           pos.getX(), pos.getY(), pos.getZ(), dim);
+        LiteralText message = new LiteralText(str);
+        Style style = message.getStyle();
+        String coords = pos.getX() + " " + pos.getY() + " " + pos.getZ();
+        style = style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, coords));
+        style = style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(coords)));
+        message.setStyle(style);
+        mc.inGameHud.getChatHud().addMessage(message);
+        Tweakeroo.logger.info(str);
     }
 
     public static String getChatTimestamp()
@@ -423,11 +452,9 @@ public class MiscUtils
             for (int x = 0; x < 128; ++x)
             {
                 int index = x + y * 128;
-                int color = state.colors[index] & 255;
-                int colorIndex = color / 4;
-                int col = colorIndex == 0 ? 0 : MapColor.getRenderColor(color & 0x3);
+                int color = MapColor.getRenderColor(state.colors[index]);
                 // Swap the color channels from ABGR to ARGB
-                int outputColor = (col & 0xFF00FF00) | (col & 0xFF0000) >> 16 | (col & 0xFF) << 16;
+                int outputColor = (color & 0xFF00FF00) | (color & 0xFF0000) >> 16 | (color & 0xFF) << 16;
 
                 image.setRGB(x, y, outputColor);
             }

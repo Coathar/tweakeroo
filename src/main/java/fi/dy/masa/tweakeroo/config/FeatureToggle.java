@@ -1,5 +1,6 @@
 package fi.dy.masa.tweakeroo.config;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.malilib.config.ConfigType;
@@ -17,9 +18,6 @@ import fi.dy.masa.tweakeroo.Tweakeroo;
 
 public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfigBoolean>
 {
-    CARPET_ACCURATE_PLACEMENT_PROTOCOL ("carpetAccuratePlacementProtocol",  false, "",    "If enabled, then the Flexible Block Placement and the\nAccurate Block Placement use the protocol implemented\nin the recent carpet mod versions", "Carpet protocol Accurate Placement"),
-    FAST_PLACEMENT_REMEMBER_ALWAYS  ("fastPlacementRememberOrientation",    true, "",     "If enabled, then the fast placement mode will always remember\nthe orientation of the first block you place.\nWithout this, the orientation will only be remembered\nwith the flexible placement enabled and active.", "Fast Placement Remember Orientation"),
-    REMEMBER_FLEXIBLE               ("rememberFlexibleFromClick",           true, "",     "If enabled, then the flexible block placement status\nwill be remembered from the first placed block,\nas long as the use key is held down.", "Remember Flexible Orientation From First Click"),
     TWEAK_ACCURATE_BLOCK_PLACEMENT  ("tweakAccurateBlockPlacement",         false, "",    "Enables a simpler version of Flexible placement, similar to\nthe Carpet mod, so basically either facing into or out\nfrom the block face clicked on."),
     TWEAK_AFTER_CLICKER             ("tweakAfterClicker",                   false, "",    KeybindSettings.INGAME_BOTH, "Enables a \"after clicker\" tweak, which does automatic right\nclicks on the just-placed block.\nUseful for example for Repeaters (setting the delay).\nTo quickly adjust the value, scroll while\nholding down the tweak toggle keybind."),
     TWEAK_AIM_LOCK                  ("tweakAimLock",                        false, "",    "Enables an aim lock, locking the yaw and pitch rotations\nto the current values.\nThis is separate from the snap aim lock,\nwhich locks them to the snapped value.\nThis allows locking them \"freely\" to the current value."),
@@ -35,6 +33,7 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     TWEAK_CREATIVE_EXTRA_ITEMS      ("tweakCreativeExtraItems",             false, "",    "Adds custom items to item groups.\nSee Lists -> 'creativeExtraItems' to control which items are added to the groups.\nNote: Currently these will be added to the Transportation group\n(because it has the elast items), but in the future\nthe groups will be configurable per added item"),
     TWEAK_CUSTOM_FLAT_PRESETS       ("tweakCustomFlatPresets",              false, "",    "Allows adding custom flat world presets to the list.\nThe presets are defined in Lists -> flatWorldPresets"),
     TWEAK_ELYTRA_CAMERA             ("tweakElytraCamera",                   false, "",    "Allows locking the real player rotations while holding the 'elytraCamera' activation key.\nThe controls will then only affect the separate 'camera rotations' for the rendering/camera.\nMeant for things like looking down/around while elytra flying nice and straight."),
+    TWEAK_ENTITY_TYPE_ATTACK_RESTRICTION("tweakEntityTypeAttackRestriction",false, "",    "Restricts which entities you are able to attack (manually).\nSee the corresponding 'entityAttackRestriction*' configs in the Lists category."),
     TWEAK_SHULKERBOX_STACKING       ("tweakEmptyShulkerBoxesStack",         false, true, "",    "Enables empty Shulker Boxes stacking up to 64.\nNOTE: They will also stack inside inventories!\nOn servers this will cause desyncs/glitches\nunless the server has a mod that does the same.\nIn single player this changes shulker box based system behaviour."),
     TWEAK_SHULKERBOX_STACK_GROUND   ("tweakEmptyShulkerBoxesStackOnGround", false, true, "",    "Enables empty Shulker Boxes stacking up to 64\nwhen as items on the ground"),
     TWEAK_EXPLOSION_REDUCED_PARTICLES ("tweakExplosionReducedParticles",    false, "",    "If enabled, then all explosion particles will use the\nEXPLOSION_NORMAL particle instead of possibly\nthe EXPLOSION_LARGE or EXPLOSION_HUGE particles"),
@@ -78,7 +77,6 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     TWEAK_PRINT_DEATH_COORDINATES   ("tweakPrintDeathCoordinates",          false, "",    "Enables printing the player's coordinates to chat on death.\nThis feature is originally from usefulmod by nessie."),
     TWEAK_PICK_BEFORE_PLACE         ("tweakPickBeforePlace",                false, "",    "If enabled, then before each block placement, the same block\nis switched to hand that you are placing against"),
     TWEAK_PLAYER_LIST_ALWAYS_ON     ("tweakPlayerListAlwaysVisible",        false, "",    "If enabled, then the player list is always rendered without\nhaving to hold down the key (tab by default)"),
-    TWEAK_REMOVE_OWN_POTION_EFFECTS ("tweakRemoveOwnPotionEffects",         false, "",    "Removes the potion effect particles from the\nplayer itself in first person mode"),
     TWEAK_RENDER_EDGE_CHUNKS        ("tweakRenderEdgeChunks",               false, "",    "Allows the edge-most client-loaded chunks to render.\nVanilla doesn't allow rendering chunks that don't have\nall the adjacent chunks loaded, meaning that the edge-most chunk\nof the client's loaded won't render in vanilla.\n§lThis is also very helpful in the Free Camera mode!§r"),
     TWEAK_RENDER_INVISIBLE_ENTITIES ("tweakRenderInvisibleEntities",        false, "",    "When enabled, invisible entities are rendered like\nthey would be in spectator mode."),
     TWEAK_RENDER_LIMIT_ENTITIES     ("tweakRenderLimitEntities",            false, "",    "Enables limiting the number of certain types of entities\nto render per frame. Currently XP Orbs and Item entities\nare supported, see Generic configs for the limits."),
@@ -94,8 +92,11 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     TWEAK_SWAP_ALMOST_BROKEN_TOOLS  ("tweakSwapAlmostBrokenTools",          false, "",    "If enabled, then any damageable items held in the hand that\nare about to break will be swapped to fresh ones"),
     TWEAK_TAB_COMPLETE_COORDINATE   ("tweakTabCompleteCoordinate",          false, "",    "If enabled, then tab-completing coordinates while not\nlooking at a block, will use the player's position\ninstead of adding the ~ character."),
     TWEAK_TOOL_SWITCH               ("tweakToolSwitch",                     false, "",    "Enables automatically switching to an effective tool for the targeted block"),
+    TWEAK_WEAPON_SWITCH             ("tweakWeaponSwitch",                   false, "",    "Enables automatically switching to a weapon for the targeted entity"),
     TWEAK_Y_MIRROR                  ("tweakYMirror",                        false, "",    "Mirrors the targeted y-position within the block bounds.\nThis is basically for placing slabs or stairs\nin the opposite top/bottom state from normal,\nif you have to place them against another slab for example."),
     TWEAK_ZOOM                      ("tweakZoom",                           false, "",    KeybindSettings.INGAME_BOTH, "Enables using the zoom hotkey to, well, zoom in");
+
+    public static final ImmutableList<FeatureToggle> VALUES = ImmutableList.copyOf(values());
 
     private final String name;
     private final String comment;
@@ -106,37 +107,37 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     private boolean valueBoolean;
     private IValueChangeCallback<IConfigBoolean> callback;
 
-    private FeatureToggle(String name, boolean defaultValue, String defaultHotkey, String comment)
+    FeatureToggle(String name, boolean defaultValue, String defaultHotkey, String comment)
     {
         this(name, defaultValue, false, defaultHotkey, KeybindSettings.DEFAULT, comment);
     }
 
-    private FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, String comment)
+    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, String comment)
     {
         this(name, defaultValue, singlePlayer, defaultHotkey, KeybindSettings.DEFAULT, comment);
     }
 
-    private FeatureToggle(String name, boolean defaultValue, String defaultHotkey, KeybindSettings settings, String comment)
+    FeatureToggle(String name, boolean defaultValue, String defaultHotkey, KeybindSettings settings, String comment)
     {
         this(name, defaultValue, false, defaultHotkey, settings, comment);
     }
 
-    private FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment)
+    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment)
     {
         this(name, defaultValue, singlePlayer, defaultHotkey, settings, comment, StringUtils.splitCamelCase(name.substring(5)));
     }
 
-    private FeatureToggle(String name, boolean defaultValue, String defaultHotkey, String comment, String prettyName)
+    FeatureToggle(String name, boolean defaultValue, String defaultHotkey, String comment, String prettyName)
     {
         this(name, defaultValue, false, defaultHotkey, comment, prettyName);
     }
 
-    private FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, String comment, String prettyName)
+    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, String comment, String prettyName)
     {
         this(name, defaultValue, singlePlayer, defaultHotkey, KeybindSettings.DEFAULT, comment, prettyName);
     }
 
-    private FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment, String prettyName)
+    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment, String prettyName)
     {
         this.name = name;
         this.valueBoolean = defaultValue;
@@ -163,12 +164,14 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     @Override
     public String getConfigGuiDisplayName()
     {
+        String name = StringUtils.getTranslatedOrFallback("config.name." + this.getName().toLowerCase(), this.getName());
+
         if (this.singlePlayer)
         {
-            return GuiBase.TXT_GOLD + this.getName() + GuiBase.TXT_RST;
+            return GuiBase.TXT_GOLD + name + GuiBase.TXT_RST;
         }
 
-        return this.getName();
+        return name;
     }
 
     @Override
@@ -212,19 +215,14 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     @Override
     public String getComment()
     {
-        if (this.comment == null)
+        String comment = StringUtils.getTranslatedOrFallback("config.comment." + this.getName().toLowerCase(), this.comment);
+
+        if (comment != null && this.singlePlayer)
         {
-            return "";
+            return comment + "\n" + StringUtils.translate("tweakeroo.label.config_comment.single_player_only");
         }
 
-        if (this.singlePlayer)
-        {
-            return this.comment + "\n" + StringUtils.translate("tweakeroo.label.config_comment.single_player_only");
-        }
-        else
-        {
-            return this.comment;
-        }
+        return comment;
     }
 
     @Override

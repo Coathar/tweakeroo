@@ -20,6 +20,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import fi.dy.masa.tweakeroo.config.Configs;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
+import fi.dy.masa.tweakeroo.tweaks.MiscTweaks;
 import fi.dy.masa.tweakeroo.tweaks.PlacementTweaks;
 import fi.dy.masa.tweakeroo.util.CameraUtils;
 import fi.dy.masa.tweakeroo.util.InventoryUtils;
@@ -44,7 +45,7 @@ public abstract class MixinClientPlayerInteractionManager
     }
 
     @Inject(method = "interactItem",
-            slice = @Slice(from = @At(value = "INVOKE", 
+            slice = @Slice(from = @At(value = "INVOKE",
                                       target = "Lnet/minecraft/item/ItemStack;use(" +
                                                "Lnet/minecraft/world/World;" +
                                                "Lnet/minecraft/entity/player/PlayerEntity;" +
@@ -90,11 +91,20 @@ public abstract class MixinClientPlayerInteractionManager
     }
 
     @Inject(method = "attackEntity", at = @At("HEAD"), cancellable = true)
-    private void preventEntityAttacksInFreeCameraMode(CallbackInfo ci)
+    private void preventEntityAttacksInFreeCameraMode(PlayerEntity player, Entity target, CallbackInfo ci)
     {
         if (CameraUtils.shouldPreventPlayerInputs())
         {
             ci.cancel();
+        }
+        else if (FeatureToggle.TWEAK_ENTITY_TYPE_ATTACK_RESTRICTION.getBooleanValue() &&
+                 MiscTweaks.isEntityAllowedByAttackingRestriction(target.getType()) == false)
+        {
+            ci.cancel();
+        }
+        else if (FeatureToggle.TWEAK_WEAPON_SWITCH.getBooleanValue())
+        {
+            InventoryUtils.trySwitchToWeapon(target);
         }
     }
 
@@ -125,6 +135,10 @@ public abstract class MixinClientPlayerInteractionManager
         {
             cir.setReturnValue(false);
         }
+        else
+        {
+            InventoryUtils.trySwapCurrentToolIfNearlyBroken();
+        }
     }
 
     @Inject(method = "updateBlockBreakingProgress", at = @At("HEAD"), cancellable = true) // MCP: onPlayerDamageBlock
@@ -134,6 +148,10 @@ public abstract class MixinClientPlayerInteractionManager
             PlacementTweaks.isPositionAllowedByBreakingRestriction(pos, side) == false)
         {
             cir.setReturnValue(true);
+        }
+        else
+        {
+            InventoryUtils.trySwapCurrentToolIfNearlyBroken();
         }
     }
 

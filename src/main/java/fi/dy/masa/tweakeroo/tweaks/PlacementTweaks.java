@@ -16,6 +16,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.item.MiningToolItem;
+import net.minecraft.item.ShovelItem;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.state.property.DirectionProperty;
@@ -33,6 +35,7 @@ import fi.dy.masa.malilib.gui.Message;
 import fi.dy.masa.malilib.util.BlockUtils;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.malilib.util.PositionUtils;
 import fi.dy.masa.malilib.util.PositionUtils.HitPart;
 import fi.dy.masa.malilib.util.restrictions.BlockRestriction;
@@ -67,7 +70,7 @@ public class PlacementTweaks
     private static int hotbarSlot = -1;
     private static ItemStack stackClickedOn = ItemStack.EMPTY;
     @Nullable private static BlockState stateClickedOn = null;
-    public static final BlockRestriction BLOCK_BREAK_RESTRICTION = new BlockRestriction();
+    public static final BlockRestriction BLOCK_TYPE_BREAK_RESTRICTION = new BlockRestriction();
     public static final BlockRestriction FAST_RIGHT_CLICK_BLOCK_RESTRICTION = new BlockRestriction();
     public static final ItemRestriction FAST_RIGHT_CLICK_ITEM_RESTRICTION = new ItemRestriction();
     public static final ItemRestriction FAST_PLACEMENT_ITEM_RESTRICTION = new ItemRestriction();
@@ -75,14 +78,17 @@ public class PlacementTweaks
 
     public static void onTick(MinecraftClient mc)
     {
+        boolean attack = mc.options.keyAttack.isPressed();
+        boolean use = mc.options.keyUse.isPressed();
+
         if (GuiUtils.getCurrentScreen() == null)
         {
-            if (mc.options.keyUse.isPressed())
+            if (use)
             {
                 onUsingTick();
             }
 
-            if (mc.player.getAbilities().creativeMode && mc.options.keyAttack.isPressed())
+            if (attack)
             {
                 onAttackTick(mc);
             }
@@ -93,20 +99,20 @@ public class PlacementTweaks
             stackBeforeUse[1] = ItemStack.EMPTY;
         }
 
-        if (mc.options.keyUse.isPressed() == false)
+        if (use == false)
         {
             clearClickedBlockInfoUse();
 
             // Clear the cached stack when releasing both keys, so that the restock doesn't happen when
-            // using another another item or an empty hand.
-            if (mc.options.keyAttack.isPressed() == false)
+            // using another item or an empty hand.
+            if (attack == false)
             {
                 stackBeforeUse[0] = ItemStack.EMPTY;
                 stackBeforeUse[1] = ItemStack.EMPTY;
             }
         }
 
-        if (mc.options.keyAttack.isPressed() == false)
+        if (attack == false)
         {
             clearClickedBlockInfoAttack();
         }
@@ -182,14 +188,17 @@ public class PlacementTweaks
     {
         if (FeatureToggle.TWEAK_FAST_LEFT_CLICK.getBooleanValue())
         {
-            final int count = Configs.Generic.FAST_LEFT_CLICK_COUNT.getIntegerValue();
-
-            for (int i = 0; i < count; ++i)
+            if (mc.player.getAbilities().creativeMode ||
+                (Configs.Generic.FAST_LEFT_CLICK_ALLOW_TOOLS.getBooleanValue() || (mc.player.getMainHandStack().getItem() instanceof MiningToolItem) == false))
             {
-                InventoryUtils.trySwapCurrentToolIfNearlyBroken();
-                isEmulatedClick = true;
-                ((IMinecraftClientInvoker) mc).leftClickMouseAccessor();
-                isEmulatedClick = false;
+                final int count = Configs.Generic.FAST_LEFT_CLICK_COUNT.getIntegerValue();
+
+                for (int i = 0; i < count; ++i)
+                {
+                    isEmulatedClick = true;
+                    ((IMinecraftClientInvoker) mc).leftClickMouseAccessor();
+                    isEmulatedClick = false;
+                }
             }
         }
         else
@@ -308,11 +317,21 @@ public class PlacementTweaks
             return ActionResult.PASS;
         }
 
+        InventoryUtils.trySwapCurrentToolIfNearlyBroken();
+
         ItemStack stackPre = player.getStackInHand(hand);
+        BlockPos posIn = hitResult.getBlockPos();
 
         if (Configs.Disable.DISABLE_AXE_STRIPPING.getBooleanValue() &&
             stackPre.getItem() instanceof AxeItem &&
-            MiscUtils.isStrippableLog(world, hitResult.getBlockPos()))
+            MiscUtils.isStrippableLog(world, posIn))
+        {
+            return ActionResult.PASS;
+        }
+
+        if (Configs.Disable.DISABLE_SHOVEL_PATHING.getBooleanValue() &&
+            stackPre.getItem() instanceof ShovelItem &&
+            MiscUtils.isShovelPathConvertableBlock(world, posIn))
         {
             return ActionResult.PASS;
         }
@@ -320,7 +339,6 @@ public class PlacementTweaks
         stackPre = stackPre.copy();
         boolean restricted = FeatureToggle.TWEAK_PLACEMENT_RESTRICTION.getBooleanValue() || FeatureToggle.TWEAK_PLACEMENT_GRID.getBooleanValue();
         Direction sideIn = hitResult.getSide();
-        BlockPos posIn = hitResult.getBlockPos();
         Vec3d hitVec = hitResult.getPos();
         Direction playerFacingH = player.getHorizontalFacing();
         HitPart hitPart = PositionUtils.getHitPart(sideIn, playerFacingH, posIn, hitVec);
@@ -393,7 +411,7 @@ public class PlacementTweaks
         boolean rotationHeld = Hotkeys.FLEXIBLE_BLOCK_PLACEMENT_ROTATION.getKeybind().isKeybindHeld();
         boolean offsetHeld = Hotkeys.FLEXIBLE_BLOCK_PLACEMENT_OFFSET.getKeybind().isKeybindHeld();
         boolean adjacent = Hotkeys.FLEXIBLE_BLOCK_PLACEMENT_ADJACENT.getKeybind().isKeybindHeld();
-        boolean rememberFlexible = FeatureToggle.REMEMBER_FLEXIBLE.getBooleanValue();
+        boolean rememberFlexible = Configs.Generic.REMEMBER_FLEXIBLE.getBooleanValue();
         boolean rotation = rotationHeld || (rememberFlexible && firstWasRotation);
         boolean offset = offsetHeld || (rememberFlexible && firstWasOffset);
         ItemStack stack = player.getStackInHand(hand);
@@ -435,7 +453,7 @@ public class PlacementTweaks
 
         if (handleFlexible == false &&
             FeatureToggle.TWEAK_FAKE_SNEAK_PLACEMENT.getBooleanValue() &&
-            stack.isEmpty() == false)
+            stack.getItem() instanceof BlockItem)
         {
             BlockHitResult hitResult = new BlockHitResult(hitVec, sideIn, posIn, false);
             ItemPlacementContext ctx = new ItemPlacementContext(new ItemUsageContext(player, hand, hitResult));
@@ -529,7 +547,7 @@ public class PlacementTweaks
                 handleAccurate = true;
             }
 
-            if ((handleAccurate || afterClicker) && FeatureToggle.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue())
+            if ((handleAccurate || afterClicker) && Configs.Generic.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue())
             {
                 // Carpet-Extra mod accurate block placement protocol support
                 double relX = hitVec.x - posNew.getX();
@@ -572,7 +590,7 @@ public class PlacementTweaks
             }
         }
 
-        if (isFirstClick == false && FeatureToggle.FAST_PLACEMENT_REMEMBER_ALWAYS.getBooleanValue())
+        if (isFirstClick == false && Configs.Generic.FAST_PLACEMENT_REMEMBER_ALWAYS.getBooleanValue())
         {
             return handleFlexibleBlockPlacement(controller, player, world, posIn, sideIn, playerYaw, hitVec, hand, null);
         }
@@ -655,7 +673,7 @@ public class PlacementTweaks
         return FAST_RIGHT_CLICK_BLOCK_RESTRICTION.isAllowed(block);
     }
 
-    private static void tryRestockHand(PlayerEntity player, Hand hand, ItemStack stackOriginal)
+    public static void tryRestockHand(PlayerEntity player, Hand hand, ItemStack stackOriginal)
     {
         if (FeatureToggle.TWEAK_HAND_RESTOCK.getBooleanValue() &&
             canUseItemWithRestriction(HAND_RESTOCK_RESTRICTION, stackOriginal))
@@ -736,7 +754,7 @@ public class PlacementTweaks
         Direction facing = sideIn;
         boolean flexible = FeatureToggle.TWEAK_FLEXIBLE_BLOCK_PLACEMENT.getBooleanValue();
         boolean rotationHeld = Hotkeys.FLEXIBLE_BLOCK_PLACEMENT_ROTATION.getKeybind().isKeybindHeld();
-        boolean rememberFlexible = FeatureToggle.REMEMBER_FLEXIBLE.getBooleanValue();
+        boolean rememberFlexible = Configs.Generic.REMEMBER_FLEXIBLE.getBooleanValue();
         boolean rotation = rotationHeld || (rememberFlexible && firstWasRotation);
         boolean accurate = FeatureToggle.TWEAK_ACCURATE_BLOCK_PLACEMENT.getBooleanValue();
         boolean keys = Hotkeys.ACCURATE_BLOCK_PLACEMENT_IN.getKeybind().isKeybindHeld() || Hotkeys.ACCURATE_BLOCK_PLACEMENT_REVERSE.getKeybind().isKeybindHeld();
@@ -744,7 +762,7 @@ public class PlacementTweaks
 
         // Carpet-Extra mod accurate block placement protocol support
         if (flexible && rotation && accurate == false &&
-            FeatureToggle.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() &&
+            Configs.Generic.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() &&
             isFacingValidFor(facing, stackOriginal))
         {
             facing = facing.getOpposite(); // go from block face to click on to the requested facing
@@ -805,7 +823,7 @@ public class PlacementTweaks
         tryRestockHand(player, hand, stackOriginal);
 
         if (FeatureToggle.TWEAK_AFTER_CLICKER.getBooleanValue() &&
-            FeatureToggle.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() == false &&
+            Configs.Generic.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() == false &&
             world.getBlockState(posPlacement) != stateBefore)
         {
             for (int i = 0; i < afterClickerClickCount; i++)
@@ -956,9 +974,19 @@ public class PlacementTweaks
         {
             BlockState state = world.getBlockState(pos);
 
-            if (BLOCK_BREAK_RESTRICTION.isAllowed(state.getBlock()) == false)
+            if (BLOCK_TYPE_BREAK_RESTRICTION.isAllowed(state.getBlock()) == false)
             {
-                InfoUtils.showGuiOrInGameMessage(Message.MessageType.WARNING, "Block breaking prevented by Block Break Restriction tweak");
+                MessageOutputType type = (MessageOutputType) Configs.Generic.BLOCK_TYPE_BREAK_RESTRICTION_WARN.getOptionListValue();
+
+                if (type == MessageOutputType.MESSAGE)
+                {
+                    InfoUtils.showGuiOrInGameMessage(Message.MessageType.WARNING, "tweakeroo.message.warning.block_type_break_restriction");
+                }
+                else if (type == MessageOutputType.ACTIONBAR)
+                {
+                    InfoUtils.printActionbarMessage("tweakeroo.message.warning.block_type_break_restriction");
+                }
+
                 return false;
             }
         }

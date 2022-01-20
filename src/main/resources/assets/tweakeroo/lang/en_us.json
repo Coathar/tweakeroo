@@ -1,13 +1,11 @@
 {
-    "tweakeroo.gui.button.config_gui.disable_hotkeys": "TweakNo Hotkeys",
-    "tweakeroo.gui.button.config_gui.disable_toggle": "TweakNo Toggles",
+    "tweakeroo.gui.button.config_gui.disables": "Yeets",
     "tweakeroo.gui.button.config_gui.fixes": "Fixes",
     "tweakeroo.gui.button.config_gui.generic": "Generic",
-    "tweakeroo.gui.button.config_gui.generic_hotkeys": "Generic Hotkeys",
+    "tweakeroo.gui.button.config_gui.generic_hotkeys": "Hotkeys",
     "tweakeroo.gui.button.config_gui.lists": "Lists",
     "tweakeroo.gui.button.config_gui.placement": "Placement stuff",
-    "tweakeroo.gui.button.config_gui.tweak_hotkeys": "Tweak Hotkeys",
-    "tweakeroo.gui.button.config_gui.tweak_toggles": "Tweak Toggles",
+    "tweakeroo.gui.button.config_gui.tweaks": "Tweaks",
 
     "tweakeroo.gui.button.misc.command_block.set_name": "Set name",
     "tweakeroo.gui.button.misc.command_block.update_execution.on": "Loops: §aON",
@@ -35,6 +33,7 @@
     "tweakeroo.label.snap_aim_mode.pitch": "Pitch",
     "tweakeroo.label.snap_aim_mode.yaw": "Yaw",
 
+    "tweakeroo.message.death_coordinates": "§6You died§r @ [§b%d, %d, %d§r] in §a%s",
     "tweakeroo.message.focusing_game": "§6Focusing§f the game (grabbing the cursor)",
     "tweakeroo.message.potion_effects_running_out": "§6!! WARNING - %s potion effect(s) about to run out in %s seconds !!§r",
     "tweakeroo.message.repair_mode.swapped_repairable_item_to_slot": "Swapped a repairable item to %s slot",
@@ -72,5 +71,8 @@
     "tweakeroo.message.toggled_zoom_on": "Toggled zoom %s, FOV: %s",
     "tweakeroo.message.unfocusing_game": "§6Un-focusing§f the game (un-grabbing the cursor)",
     "tweakeroo.message.value.off": "OFF",
-    "tweakeroo.message.value.on": "ON"
+    "tweakeroo.message.value.on": "ON",
+
+    "tweakeroo.message.warning.block_type_break_restriction": "§6Block breaking prevented by Block Type Break Restriction tweak",
+    "tweakeroo.message.warning.entity_type_attack_restriction": "§6Entity attack prevented by Entity Type Attack Restriction tweak"
 }
