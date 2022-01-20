@@ -78,8 +78,8 @@ public class PlacementTweaks
 
     public static void onTick(MinecraftClient mc)
     {
-        boolean attack = mc.options.keyAttack.isPressed();
-        boolean use = mc.options.keyUse.isPressed();
+        boolean attack = mc.options.attackKey.isPressed();
+        boolean use = mc.options.useKey.isPressed();
 
         if (GuiUtils.getCurrentScreen() == null)
         {
@@ -291,7 +291,7 @@ public class PlacementTweaks
             ((IMinecraftClientInvoker) mc).setItemUseCooldown(4);
         }
         else if (FeatureToggle.TWEAK_FAST_RIGHT_CLICK.getBooleanValue() &&
-                mc.options.keyUse.isPressed() &&
+                mc.options.useKey.isPressed() &&
                 canUseFastRightClick(mc.player))
         {
             final int count = Configs.Generic.FAST_RIGHT_CLICK_COUNT.getIntegerValue();
@@ -1213,7 +1213,7 @@ public class PlacementTweaks
             container != null && container == player.playerScreenHandler &&
             (slotNumber == 45 || (slotNumber - 36) == player.getInventory().selectedSlot))
         {
-            if (mc.options.keyUse.isPressed() &&
+            if (mc.options.useKey.isPressed() &&
                 (Configs.Generic.SLOT_SYNC_WORKAROUND_ALWAYS.getBooleanValue() ||
                  FeatureToggle.TWEAK_FAST_BLOCK_PLACEMENT.getBooleanValue() ||
                  FeatureToggle.TWEAK_FAST_RIGHT_CLICK.getBooleanValue()))
@@ -1221,7 +1221,7 @@ public class PlacementTweaks
                 return true;
             }
 
-            if (mc.options.keyAttack.isPressed() &&
+            if (mc.options.attackKey.isPressed() &&
                 FeatureToggle.TWEAK_FAST_LEFT_CLICK.getBooleanValue())
             {
                 return true;

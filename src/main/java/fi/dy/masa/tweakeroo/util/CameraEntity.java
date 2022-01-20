@@ -54,14 +54,14 @@ public class CameraEntity extends ClientPlayerEntity
             float strafe = 0;
 
             GameOptions options = mc.options;
-            if (options.keyForward.isPressed()) { forward++;  }
-            if (options.keyBack.isPressed())    { forward--;  }
-            if (options.keyLeft.isPressed())    { strafe++;   }
-            if (options.keyRight.isPressed())   { strafe--;   }
-            if (options.keyJump.isPressed())    { vertical++; }
-            if (options.keySneak.isPressed())   { vertical--; }
+            if (options.forwardKey.isPressed()) { forward++;  }
+            if (options.backKey.isPressed())    { forward--;  }
+            if (options.leftKey.isPressed())    { strafe++;   }
+            if (options.rightKey.isPressed())   { strafe--;   }
+            if (options.jumpKey.isPressed())    { vertical++; }
+            if (options.sneakKey.isPressed())   { vertical--; }
 
-            if (options.keySprint.isPressed())
+            if (options.sprintKey.isPressed())
             {
                 sprinting = true;
             }

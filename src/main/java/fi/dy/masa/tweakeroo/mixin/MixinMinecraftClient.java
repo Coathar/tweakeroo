@@ -23,6 +23,7 @@ import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import fi.dy.masa.tweakeroo.tweaks.MiscTweaks;
 import fi.dy.masa.tweakeroo.tweaks.PlacementTweaks;
 import fi.dy.masa.tweakeroo.util.IMinecraftClientInvoker;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient implements IMinecraftClientInvoker
@@ -35,7 +36,7 @@ public abstract class MixinMinecraftClient implements IMinecraftClientInvoker
     @Shadow protected int attackCooldown;
 
     @Shadow
-    private void doAttack() {}
+    abstract boolean doAttack();
 
     @Shadow
     private void doItemUse() {}
@@ -73,7 +74,7 @@ public abstract class MixinMinecraftClient implements IMinecraftClientInvoker
             @At(value = "INVOKE",
                 target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackBlock(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/Direction;)Z")
             })
-    private void onLeftClickMousePre(CallbackInfo ci)
+    private void onLeftClickMousePre(CallbackInfoReturnable<Boolean> cir)
     {
         PlacementTweaks.onLeftClickMousePre();
     }
@@ -81,7 +82,7 @@ public abstract class MixinMinecraftClient implements IMinecraftClientInvoker
     @Inject(method = "doAttack", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/network/ClientPlayerEntity;swingHand(Lnet/minecraft/util/Hand;)V"))
-    private void onLeftClickMousePost(CallbackInfo ci)
+    private void onLeftClickMousePost(CallbackInfoReturnable<Boolean> cir)
     {
         PlacementTweaks.onLeftClickMousePost();
     }
@@ -118,12 +119,12 @@ public abstract class MixinMinecraftClient implements IMinecraftClientInvoker
                     this.attackCooldown = 0;
                 }
 
-                KeyBinding.setKeyPressed(InputUtil.fromTranslationKey(this.options.keyAttack.getBoundKeyTranslationKey()), true);
+                KeyBinding.setKeyPressed(InputUtil.fromTranslationKey(this.options.attackKey.getBoundKeyTranslationKey()), true);
             }
 
             if (FeatureToggle.TWEAK_HOLD_USE.getBooleanValue())
             {
-                KeyBinding.setKeyPressed(InputUtil.fromTranslationKey(this.options.keyUse.getBoundKeyTranslationKey()), true);
+                KeyBinding.setKeyPressed(InputUtil.fromTranslationKey(this.options.useKey.getBoundKeyTranslationKey()), true);
             }
         }
     }
