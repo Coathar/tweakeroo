@@ -103,6 +103,11 @@ public abstract class MixinGameRenderer
             predicate = predicate.and((entityIn) -> (entityIn instanceof LivingEntity) == false || ((LivingEntity) entityIn).getHealth() > 0f);
         }
 
+        if (Configs.Disable.DISABLE_MOB_TARGETING.getBooleanValue())
+        {
+            predicate = predicate.and((entityIn) -> false);
+        }
+
         if ((FeatureToggle.TWEAK_HANGABLE_ENTITY_BYPASS.getBooleanValue() && this.client.player != null
              && this.client.player.isSneaking() == Configs.Generic.HANGABLE_ENTITY_BYPASS_INVERSE.getBooleanValue()))
         {
