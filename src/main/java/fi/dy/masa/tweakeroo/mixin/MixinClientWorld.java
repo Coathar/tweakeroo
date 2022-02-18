@@ -12,6 +12,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.MutableWorldProperties;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
@@ -20,7 +21,7 @@ import fi.dy.masa.tweakeroo.config.Configs;
 @Mixin(ClientWorld.class)
 public abstract class MixinClientWorld extends World
 {
-    protected MixinClientWorld(MutableWorldProperties properties, RegistryKey<World> registryKey, DimensionType dimensionType, Supplier<Profiler> supplier, boolean bl, boolean bl2, long l)
+    protected MixinClientWorld(MutableWorldProperties properties, RegistryKey<World> registryKey, RegistryEntry<DimensionType> dimensionType, Supplier<Profiler> supplier, boolean bl, boolean bl2, long l)
     {
         super(properties, registryKey, dimensionType, supplier, bl, bl2, l);
     }
